@@ -1,6 +1,9 @@
+import bcrypt from 'bcrypt';
 import { Schema,model} from 'mongoose';
 import { UserInformation } from './user/user.interface';
+// const bcrypt = require('bcrypt');
 
+import config from '../config';
 
 
 const userSchema = new Schema<UserInformation>({
@@ -149,6 +152,37 @@ const userSchema = new Schema<UserInformation>({
     }
 
 
+  });
+
+  userSchema.pre('save', function(next) {
+    console.log(this.password,'pre save hook');
+    const user = this;
+    bcrypt.hash(user.password,Number(config.ssaltRounds))
+    .then(hashedPassword => {
+        user.password = hashedPassword;
+        next();
+    })
+    .catch(error => {
+        next(error);
+    });
+    
+
+    
+    // let user = this;
+    // bcrypt.hash(user.password,Number(config.ssaltRounds))
+    // .then(hashedPassword => {
+    //     user.password = hashedPassword;
+    //     next();
+    // })
+    // .catch(error => {
+    //     next(error);
+    // });
+    // next();
+  });
+
+  userSchema.post('save', function (doc, next) {
+    doc.password = '';
+    next();
   });
 
 
